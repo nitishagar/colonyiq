@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   accumulateSSE,
+  extractReportText,
   fetchReport,
   finalizeCount,
   segmentPlate,
@@ -121,5 +122,26 @@ describe('fetchReport', () => {
     expect(out).toEqual({ cfu_per_ml: 820000 });
     const [, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(init.body as string).count).toBe(82);
+  });
+});
+
+describe('extractReportText', () => {
+  it('pulls the model text out of the untouched upstream envelope', () => {
+    const envelope = {
+      model: 'muse-spark-1.2',
+      output: [
+        { type: 'reasoning' },
+        {
+          type: 'message',
+          content: [{ type: 'output_text', text: '{"cfu_per_ml":820000,"count":82}' }],
+        },
+      ],
+    };
+    expect(extractReportText(envelope)).toBe('{\n  "cfu_per_ml": 820000,\n  "count": 82\n}');
+  });
+
+  it('falls back to raw JSON when no text part exists', () => {
+    expect(extractReportText({ error: 'x' })).toBe('{\n  "error": "x"\n}');
+    expect(extractReportText('plain')).toBe('"plain"');
   });
 });

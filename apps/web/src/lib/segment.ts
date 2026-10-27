@@ -111,6 +111,33 @@ export interface ReportPayload {
   platedVolumeMl?: number;
 }
 
+interface ReportEnvelope {
+  output?: Array<{ content?: Array<{ text?: string }> }>;
+}
+
+/**
+ * The Worker passes the upstream response through untouched (G-ARCH-1), so the
+ * report arrives as a full Responses envelope. Extract the model's text (the
+ * CFU JSON) for display; fall back to the raw envelope when absent.
+ */
+export function extractReportText(upstream: unknown): string {
+  const out = (upstream as ReportEnvelope | null)?.output;
+  if (Array.isArray(out)) {
+    for (const item of out) {
+      for (const part of item.content ?? []) {
+        if (part.text) {
+          try {
+            return JSON.stringify(JSON.parse(part.text), null, 2);
+          } catch {
+            return part.text;
+          }
+        }
+      }
+    }
+  }
+  return JSON.stringify(upstream, null, 2);
+}
+
 /** POST the deterministic count to /api/report and return upstream JSON. */
 export async function fetchReport(
   apiBase: string,

@@ -1,6 +1,12 @@
 import { useRef, useState } from 'react';
 import { drawBoxes, type OverlayBox } from './lib/overlay';
-import { fetchReport, finalizeCount, segmentPlate, type SentTile } from './lib/segment';
+import {
+  extractReportText,
+  fetchReport,
+  finalizeCount,
+  segmentPlate,
+  type SentTile,
+} from './lib/segment';
 import { cropTileDataUri, fileToDataTile, planQuadrants } from './lib/tile';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
@@ -75,7 +81,7 @@ export default function App() {
         dilutionFactor: Number(dilution) || undefined,
         platedVolumeMl: Number(volume) || undefined,
       });
-      setReport(JSON.stringify(rep, null, 2));
+      setReport(extractReportText(rep));
       setStatus(`Done: ${count} colonies (deterministic count; report below).`);
     } catch (err) {
       setStatus(`Failed: ${err instanceof Error ? err.message : String(err)}`);

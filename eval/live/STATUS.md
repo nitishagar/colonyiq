@@ -7,6 +7,7 @@ API token via `CLOUDFLARE_API_TOKEN` env only. No key material in this repo.
 
 - Worker: `https://colonyiq-api.nitishagar.workers.dev` (wrangler deploy OK)
 - Web: `https://colonyiq-web.pages.dev` (HTTP 200, full chain wired: photo → tiles → /api/segment SSE → dedupe/filter/count → numbered overlay → /api/report CFU JSON; tiled-dense toggle + dilution inputs)
+- Headless-Chromium e2e (phone viewport, real AGAR 349 upload): single → "Done: 89 colonies" + drawn overlay + report; tiled → "Done: 96 colonies"; after report-display fix → count 88 with `{"cfu_per_ml":880000,"result":"8.8e5 CFU/mL"}` (math verified: 88×1000/0.1). G-D6-1 live-URL loop PASS
 - `META_API_KEY`: stored as Worker secret (never in repo / `VITE_*`)
 
 ## Gate outcomes
