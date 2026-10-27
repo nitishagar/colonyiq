@@ -1,4 +1,1 @@
-<det> x=645 y=1526 w=44 h=46 s=0.93 </det>
-<det> x=700 y=1530 w=40 h=42 s=0.88 mask=aGVsbG8= </det>
-not a detection line
-<det> x=10 y=20 w=30 h=32 s=0.50 </det>
+<0f>0<|box;x1=433;y1=682;x2=447;y2=695;w=959;h=1024|><|mask;x=0;y=0;data=14,15,~!!!#5!0c]&W6%0ZChn'N%`5NV5*0kDA[5ksUsuGVh9d1T50neP.H]080.^w+sYkvEhxB3#$I6n+2I=+%[DC{)b5bpG]BFE_I!AC&d/%RbY67$R-Dq6&wOzjgM*V1U1T8sdQ&LD|>,1<|box;x1=761;y1=316;x2=775;y2=329;w=959;h=1024|><|mask;x=0;y=0;data=14,15,~!!!#+#K{)UN?)U?J4Rr*x#aQJVE*A./ivNmK@Pd'DT!PHly[P+awbz3-U@yp'*[^'V-xARc.PAV/)#U-CYmEBiSF[$n*w{?%xb-pYoSA^2OYZU89knh^U8*Lw{D|>,2<|box;x1=541;y1=564;x2=555;y2=579;w=959;h=1024|><|mask;x=0;y=0;data=16,15,~!!!#B!kCnu:vnk]Gv+Nz?_Ej!*7B8?5mD%sVrr-QIBIOtr7CI9Kb+'oBO1Jcv?3DF#YSioRvLlkoXo$y%K#TQ!V!*(LcjO-TU1gXnUJBk+$MQturVaeRH5+wY{6W'(RrxX0ThwRvi5UwIJMNP!!|>

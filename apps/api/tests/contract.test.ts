@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/index';
 import { SAM_MODEL, SPARK_MODEL } from '../src/lib/meta';
+import { SAM_CONCEPT } from '../src/routes/segment';
 import { clearBuckets } from '../src/middleware/rateLimiter';
 
 const ENV = { META_API_KEY: 'test-key', ENVIRONMENT: 'test' };
@@ -95,5 +96,19 @@ describe('model IDs pinned server-side (G-SEC-2)', () => {
   it('exports the exact fixed IDs', () => {
     expect(SAM_MODEL).toBe('sam-3.1');
     expect(SPARK_MODEL).toBe('muse-spark-1.2');
+  });
+
+  it('/api/segment pins stream:true + bare-noun concept (docs: instructions return nothing)', async () => {
+    const app = createApp();
+    const mock = stubUpstream();
+    const res = await post(app, '/api/segment', { image: IMG });
+    expect(res.status).toBe(200);
+    const [, init] = mock.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.stream).toBe(true);
+    expect(SAM_CONCEPT).toBe('spot');
+    const content = body.input[0].content;
+    expect(content[0]).toEqual({ type: 'input_text', text: 'spot' });
+    expect(content[1].type).toBe('input_image');
   });
 });

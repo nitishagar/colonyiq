@@ -7,50 +7,51 @@ const fixtures = fileURLToPath(new URL('../fixtures/', import.meta.url));
 const stream1 = readFileSync(fixtures + 'stream1.txt', 'utf8');
 const stream2 = readFileSync(fixtures + 'stream2-edge.txt', 'utf8');
 
-describe('parseStreamChunk (G-D1-2)', () => {
-  it('parses the recorded stream1 fixture: 3 detections, garbage ignored', () => {
+describe('parseStreamChunk, real SAM grammar (G-D1-2)', () => {
+  it('parses recorded stream1: 3 detections, inclusive corners, mask payloads', () => {
     const dets = parseStreamChunk(stream1);
     expect(dets).toHaveLength(3);
-    expect(dets[0]).toEqual({ x: 645, y: 1526, width: 44, height: 46, score: 0.93 });
-    expect(dets[1]).toMatchObject({ x: 700, y: 1530, width: 40, height: 42, score: 0.88 });
-    expect(dets[1].mask).toBe('aGVsbG8=');
-    expect(dets[2]).toMatchObject({ x: 10, y: 20, width: 30, height: 32, score: 0.5 });
-    expect(dets[0].mask).toBeUndefined();
+    expect(dets[0]).toMatchObject({
+      id: 0, frame: 0, x: 433, y: 682, width: 15, height: 14,
+      score: 1, srcW: 959, srcH: 1024,
+    });
+    expect(dets[0].mask).toMatch(/^data=14,15,~/);
+    expect(dets[1]).toMatchObject({ id: 1, x: 761, y: 316, width: 15, height: 14 });
+    expect(dets[2]).toMatchObject({ id: 2, x: 541, y: 564, width: 15, height: 16 });
   });
 
-  it('handles edge cases: s=0/s=1.0 bounds, negative coords, masks, whitespace', () => {
+  it('handles sparse ids, confidence fields; drops garbage + partial tail', () => {
     const dets = parseStreamChunk(stream2);
-    // Lines 3 (garbage), 5 (missing h), 6 (s=2.0 out of range) are dropped.
-    expect(dets).toHaveLength(4);
-    expect(dets[0]).toMatchObject({ x: 0, y: 0, score: 0 });
-    expect(dets[1]).toMatchObject({ x: -5, y: 100, score: 1, mask: 'QUJDRA==' });
-    expect(dets[2]).toMatchObject({ score: 0.75, mask: 'aGVsbG8=' });
-    expect(dets[3]).toMatchObject({ x: 7, y: 8, score: 0.01 });
+    expect(dets.map((d) => d.id)).toEqual([0, 2]);
+    expect(dets[0]).toMatchObject({ score: 0.96, width: 10, height: 10 });
+    expect(dets[0].mask).toBe('data=2,2,~AB');
+    expect(dets[1]).toMatchObject({ score: 1 });
+    expect(dets[1].mask).toBe('data=2,2,!CD');
   });
 
-  it('returns [] for empty input and pure garbage', () => {
+  it('returns [] for empty input, pure garbage, and zero-match streams', () => {
     expect(parseStreamChunk('')).toEqual([]);
     expect(parseStreamChunk('hello\nworld\n')).toEqual([]);
   });
 });
 
 describe('StreamParser incremental push/flush', () => {
-  it('reassembles a <det> line split across chunk boundaries', () => {
+  it('reassembles a record split mid-mask-payload across chunks', () => {
     const p = new StreamParser();
-    const full = '<det> x=12 y=34 w=56 h=78 s=0.91 </det>\n';
-    const half = Math.floor(full.length / 2);
-    expect(p.push(full.slice(0, half))).toEqual([]);
-    const dets = p.push(full.slice(half));
+    const rec = '<0f>0<|box;x1=1;y1=2;x2=3;y2=4;w=10;h=10|><|mask;x=0;y=0;data=2,2,~PAYLOAD|>';
+    const cut = rec.indexOf('PAYL');
+    expect(p.push(rec.slice(0, cut))).toEqual([]);
+    const dets = p.push(rec.slice(cut));
     expect(dets).toHaveLength(1);
-    expect(dets[0]).toMatchObject({ x: 12, y: 34, width: 56, height: 78, score: 0.91 });
+    expect(dets[0]).toMatchObject({ id: 0, x: 1, y: 2, width: 3, height: 3 });
+    expect(dets[0].mask).toBe('data=2,2,~PAYLOAD');
   });
 
-  it('buffers the trailing partial line and emits it on flush', () => {
+  it('never emits a partial record: held across push, dropped on flush', () => {
     const p = new StreamParser();
-    expect(p.push('garbage\n<det> x=1 y=2 w=3 h=4 s=0.5 </det>')).toEqual([]);
-    const dets = p.flush();
-    expect(dets).toHaveLength(1);
-    expect(dets[0]).toMatchObject({ x: 1, y: 2 });
+    const full = '<0f>0<|box;x1=1;y1=2;x2=3;y2=4;w=10;h=10|><|mask;x=0;y=0;data=2,2,~AB|>';
+    expect(p.push('garbage\n' + full.slice(0, 20))).toEqual([]);
+    expect(p.flush()).toEqual([]); // incomplete record is not a detection
     expect(p.flush()).toEqual([]);
   });
 
@@ -60,5 +61,6 @@ describe('StreamParser incremental push/flush', () => {
     for (let i = 0; i < stream1.length; i += 7) out.push(...p.push(stream1.slice(i, i + 7)));
     out.push(...p.flush());
     expect(out).toHaveLength(3);
+    expect(out.map((d) => d.id)).toEqual([0, 1, 2]);
   });
 });
