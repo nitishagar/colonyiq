@@ -47,7 +47,7 @@ describe('Worker pass-through contract (G-ARCH-1)', () => {
     const res = await post(app, path, payload);
     expect(res.status).toBe(200);
     expect(mock).toHaveBeenCalledTimes(1);
-    const [url, init] = mock.mock.calls[0] as [string, RequestInit];
+    const [url, init] = mock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://api.meta.ai/v1/responses');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>).authorization).toBe('Bearer test-key');
@@ -84,7 +84,7 @@ describe('Worker pass-through contract (G-ARCH-1)', () => {
   it.each(cases)('$path returns 500 when the server key is missing', async ({ path, payload }) => {
     const app = createApp();
     const mock = stubUpstream();
-    const res = await post(app, path, payload, { ENVIRONMENT: 'test' });
+    const res = await post(app, path, payload, { ENVIRONMENT: 'test' } as typeof ENV);
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'UPSTREAM_NOT_CONFIGURED' });
     expect(mock).not.toHaveBeenCalled();
