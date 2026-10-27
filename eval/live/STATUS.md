@@ -6,7 +6,7 @@ API token via `CLOUDFLARE_API_TOKEN` env only. No key material in this repo.
 ## Deployments (verified live)
 
 - Worker: `https://colonyiq-api.nitishagar.workers.dev` (wrangler deploy OK)
-- Web: `https://colonyiq-web.pages.dev` (HTTP 200, serves app shell)
+- Web: `https://colonyiq-web.pages.dev` (HTTP 200, full chain wired: photo → tiles → /api/segment SSE → dedupe/filter/count → numbered overlay → /api/report CFU JSON; tiled-dense toggle + dilution inputs)
 - `META_API_KEY`: stored as Worker secret (never in repo / `VITE_*`)
 
 ## Gate outcomes
@@ -23,7 +23,7 @@ API token via `CLOUDFLARE_API_TOKEN` env only. No key material in this repo.
 | G-D0-2 ratelimit binding | FALLBACK ACTIVE | In-code `rateLimiter.ts` tested (unit + 429 app test). Native binding probe deferred |
 | G-D0-3 spend cap | MANUAL | Check Meta console for per-key cap; set + screenshot |
 | G-D1-4 scaffold+deploy | PASS | `vite build`, `wrangler deploy`, Pages deploy all green; secret stored |
-| G-D4-1 dev-MAE | EXISTS (SAM: 25.1, classical: 39.5) | SAM single-shot `spot` @1024, dev n=19: MAE=25.05, medianAE=7.0. Outliers: 518 dense collapse (283 err; tiled rescue 240, ex-518 MAE≈10.7) and 14684 concept mismatch (`spot`=0 repeatable, `colony dot`=166 overcount vs GT 55 — open tuning). Classical baseline MAE=39.5 (`uv run python eval/classical/count.py`). No Discord question needed — docs resolved it |
+| G-D4-1 dev-MAE | EXISTS (SAM: 25.1, classical: 39.5) | SAM single-shot `spot` @1024, dev n=19: MAE=25.05, medianAE=7.0. Outliers: 518 dense collapse (283 err; tiled rescue 240, ex-518 MAE≈10.7) and 14684 partial mismatch (`spot`=0 whole-dish repeatable, 2×2 native tiling → 24 vs GT 55; `colony dot`=166 overcount — open tuning). Classical baseline MAE=39.5 (`uv run python eval/classical/count.py`). No Discord question needed — docs resolved it |
 | G-EVAL-4 box P/R/F1 | classical ≈ 0 (honest negative) | Same backend scored by `eval/classical/boxscore.py`: micro P=0.011 R=0.009 F1=0.010 @ IoU 0.5 (TP=11 FP=1011 FN=1239). Root cause: colonies sit ~8 gray levels from agar — threshold regions don't coincide with GT. Classical counts are a weak baseline; classical boxes are unusable. Needs SAM (or learned) backend |
 
 ## SAM-3.1: resolved via official docs (no Discord question needed)

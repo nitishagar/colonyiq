@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeTiles, tileBoxToGlobal } from '../src/tile';
+import { computeQuadrants, computeTiles, tileBoxToGlobal } from '../src/tile';
 
 describe('computeTiles', () => {
   it('covers the image with the nominal step (tile - overlap)', () => {
@@ -47,6 +47,37 @@ describe('computeTiles', () => {
     expect(() => computeTiles(100, 100, 64, 64)).toThrow('invalid tiling geometry');
     expect(() => computeTiles(100, 100, 64, 100)).toThrow('invalid tiling geometry');
     expect(() => computeTiles(100, 100, 64, -1)).toThrow('invalid tiling geometry');
+  });
+});
+
+describe('computeQuadrants (dense-plate fallback)', () => {
+  it('emits 4 overlapping quadrants covering every pixel', () => {
+    const W = 3775;
+    const H = 4000;
+    const tiles = computeQuadrants(W, H, 128);
+    expect(tiles).toHaveLength(4);
+    // Overlap bands: right quads start left of center, bottom quads above middle.
+    expect(tiles[1].x).toBeLessThan(W / 2);
+    expect(tiles[2].y).toBeLessThan(H / 2);
+    for (const t of tiles) {
+      expect(t.x).toBeGreaterThanOrEqual(0);
+      expect(t.y).toBeGreaterThanOrEqual(0);
+      expect(t.x + t.width).toBeLessThanOrEqual(W);
+      expect(t.y + t.height).toBeLessThanOrEqual(H);
+    }
+    for (let y = 0; y < H; y += 211) {
+      for (let x = 0; x < W; x += 197) {
+        expect(
+          tiles.some((t) => x >= t.x && x < t.x + t.width && y >= t.y && y < t.y + t.height),
+          `pixel ${x},${y} uncovered`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('rejects invalid geometry', () => {
+    expect(() => computeQuadrants(0, 100)).toThrow('invalid tiling geometry');
+    expect(() => computeQuadrants(100, 100, -1)).toThrow('invalid tiling geometry');
   });
 });
 

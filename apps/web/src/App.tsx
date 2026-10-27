@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import { drawBoxes, type OverlayBox } from './lib/overlay';
+import { fetchReport, finalizeCount, segmentPlate, type SentTile } from './lib/segment';
+import { cropTileDataUri, fileToDataTile, planQuadrants } from './lib/tile';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
@@ -7,37 +9,86 @@ export default function App() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [boxes, setBoxes] = useState<OverlayBox[]>([]);
   const [status, setStatus] = useState('Take or upload a plate photo.');
+  const [report, setReport] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [tiled, setTiled] = useState(false);
+  const [dilution, setDilution] = useState('1');
+  const [volume, setVolume] = useState('0.1');
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const bitmapRef = useRef<ImageBitmap | null>(null);
+  const fileRef = useRef<File | null>(null);
 
-  function onFile(file: File | undefined) {
+  function draw(current: OverlayBox[], naturalW: number, naturalH: number) {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (img && canvas) drawBoxes(canvas, img.clientWidth, img.clientHeight, current, naturalW, naturalH);
+  }
+
+  async function onFile(file: File | undefined) {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPhotoUrl(url);
-    // Placeholder: demo overlay until /api/segment is wired.
-    setBoxes([
-      { x: 60, y: 80, width: 40, height: 38, label: 'demo' },
-      { x: 150, y: 200, width: 34, height: 34, label: 'demo' },
-    ]);
-    setStatus(`Loaded ${file.name} — overlay is a placeholder.`);
+    bitmapRef.current?.close();
+    bitmapRef.current = await createImageBitmap(file);
+    fileRef.current = file;
+    setPhotoUrl(URL.createObjectURL(file));
+    setBoxes([]);
+    setReport(null);
+    setStatus(`Loaded ${file.name} (${bitmapRef.current.width}×${bitmapRef.current.height}).`);
   }
 
   function onImageLoad() {
-    const img = imgRef.current;
-    const canvas = canvasRef.current;
-    if (img && canvas) drawBoxes(canvas, img.clientWidth, img.clientHeight, boxes);
+    const bmp = bitmapRef.current;
+    if (bmp) draw(boxes, bmp.width, bmp.height);
   }
 
   async function onSegment() {
-    setStatus('Segmentation not wired yet — see /api/segment.');
-    if (API_BASE) setStatus(`API base: ${API_BASE} (placeholder, no request sent).`);
+    const bmp = bitmapRef.current;
+    const file = fileRef.current;
+    if (!bmp || !file) return;
+    if (!API_BASE) {
+      setStatus('API base not configured (VITE_API_BASE).');
+      return;
+    }
+    setBusy(true);
+    setReport(null);
+    try {
+      const { width: W, height: H } = bmp;
+      const tiles = tiled
+        ? planQuadrants(W, H)
+        : [{ x: 0, y: 0, width: W, height: H, row: 0, col: 0 }];
+      setStatus(`Segmenting ${tiles.length} tile(s)…`);
+      const sent: SentTile[] = [];
+      for (const tile of tiles) {
+        const { dataUri, sendScale } = await cropTileDataUri(bmp, tile);
+        sent.push({ tile, dataUri, sendScale });
+      }
+      const global = await segmentPlate(API_BASE, sent);
+      const { boxes: kept, count } = finalizeCount(global);
+      const numbered: OverlayBox[] = kept.map((b, i) => ({ ...b, label: String(i + 1) }));
+      setBoxes(numbered);
+      draw(numbered, W, H);
+      setStatus(`Counted ${count} colonies — writing report…`);
+      const dish = await fileToDataTile(file);
+      const rep = await fetchReport(API_BASE, {
+        image: dish,
+        count,
+        dilutionFactor: Number(dilution) || undefined,
+        platedVolumeMl: Number(volume) || undefined,
+      });
+      setReport(JSON.stringify(rep, null, 2));
+      setStatus(`Done: ${count} colonies (deterministic count; report below).`);
+    } catch (err) {
+      setStatus(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <main style={{ maxWidth: 640, margin: '0 auto', padding: 16, fontFamily: 'system-ui' }}>
       <h1>ColonyIQ</h1>
       <p>{status}</p>
-      <p style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <p style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <label>
           Take photo
           <input
@@ -49,14 +100,35 @@ export default function App() {
         </label>
         <label>
           Upload
+          <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} />
+        </label>
+        <label>
+          <input type="checkbox" checked={tiled} onChange={(e) => setTiled(e.target.checked)} />
+          Tiled (dense plate)
+        </label>
+        <label>
+          Dilution
           <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => onFile(e.target.files?.[0])}
+            type="number"
+            min="1"
+            value={dilution}
+            onChange={(e) => setDilution(e.target.value)}
+            style={{ width: 80 }}
           />
         </label>
-        <button type="button" onClick={onSegment} disabled={!photoUrl}>
-          Segment
+        <label>
+          mL plated
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={volume}
+            onChange={(e) => setVolume(e.target.value)}
+            style={{ width: 70 }}
+          />
+        </label>
+        <button type="button" onClick={onSegment} disabled={!photoUrl || busy}>
+          {busy ? 'Working…' : 'Segment'}
         </button>
       </p>
       {photoUrl && (
@@ -73,6 +145,9 @@ export default function App() {
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           />
         </div>
+      )}
+      {report && (
+        <pre style={{ whiteSpace: 'pre-wrap', background: '#f5f5f5', padding: 8 }}>{report}</pre>
       )}
     </main>
   );

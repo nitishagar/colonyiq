@@ -36,6 +36,23 @@ export function computeTiles(
   return tiles;
 }
 
+/**
+ * Dense-plate fallback (G-D1-1): split into 4 overlapping quadrants so small
+ * colonies render large enough to match. Validated on AGAR 518: 15 → 240.
+ */
+export function computeQuadrants(imageW: number, imageH: number, overlap = 128): Tile[] {
+  if (imageW <= 0 || imageH <= 0 || overlap < 0) throw new Error('invalid tiling geometry');
+  const mx = Math.floor(imageW / 2);
+  const my = Math.floor(imageH / 2);
+  const o = Math.min(overlap, mx, my);
+  return [
+    { x: 0, y: 0, width: mx + o, height: my + o, row: 0, col: 0 },
+    { x: mx - o, y: 0, width: imageW - mx + o, height: my + o, row: 0, col: 1 },
+    { x: 0, y: my - o, width: mx + o, height: imageH - my + o, row: 1, col: 0 },
+    { x: mx - o, y: my - o, width: imageW - mx + o, height: imageH - my + o, row: 1, col: 1 },
+  ];
+}
+
 /** Shift a tile-local box to image-global coordinates. */
 export function tileBoxToGlobal(
   tile: Tile,
