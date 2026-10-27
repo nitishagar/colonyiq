@@ -82,6 +82,33 @@ describe('Worker pass-through contract (G-ARCH-1)', () => {
     expect(mock).not.toHaveBeenCalled();
   });
 
+  it.each(cases)('$path rejects non-data-URI images without calling upstream', async ({ path, payload }) => {
+    const app = createApp();
+    const mock = stubUpstream();
+    for (const image of ['https://evil.example/x.jpg', 'x', '']) {
+      const res = await post(app, path, { ...payload, image });
+      expect(res.status, `${path} must reject ${JSON.stringify(image)}`).toBe(400);
+    }
+    expect(mock).not.toHaveBeenCalled();
+  });
+
+  it.each(cases)('$path returns 413 for oversized bodies', async ({ path, payload }) => {
+    const app = createApp();
+    const mock = stubUpstream();
+    const res = await app.request(
+      path,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'content-length': '99999999' },
+        body: JSON.stringify(payload),
+      },
+      ENV,
+    );
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: 'PAYLOAD_TOO_LARGE' });
+    expect(mock).not.toHaveBeenCalled();
+  });
+
   it.each(cases)('$path returns 500 when the server key is missing', async ({ path, payload }) => {
     const app = createApp();
     const mock = stubUpstream();

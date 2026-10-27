@@ -1,76 +1,52 @@
 # ColonyIQ
 
-Phone-friendly agar colony counter. Snap a plate, get count + CFU/mL + flags.
+Every phone, a microbiology lab assistant. Photograph a petri dish and get colonies segmented, counted, and checked in seconds — plus a draft lab report with CFU math.
 
-Built with Muse Code.
+Live demo: https://colonyiq-web.pages.dev — Demo video: `assets/demos/colonyiq_demo.mp4`
 
-## Problem
+Built with Muse Code for the Meta Global AI Developer Hackathon (Indie track, Push the Frontier).
 
-Manual colony counting is slow and error-prone. ColonyIQ segments colonies with
-SAM-3.1, flags suspicious colonies with Muse Spark, and computes deterministic
-counts with CFU/mL math — all from a phone photo.
+## Start
 
-## Architecture
-
-```
-apps/web (Vite + React)  →  tiling, base64, mask decode, CV, count, CFU (browser)
-apps/api (Hono Worker)   →  pass-through: /api/segment /api/flag /api/report
-packages/pipeline        →  pure-TS: tile, dedupe, filter, count, CFU, SAM parser
-eval/                    →  TS driver + metrics, Python tables stub
-synth/                   →  synthetic plate stub
+```bash
+git clone https://github.com/nitishagar/colonyiq.git
+cd colonyiq
+npm install
+npm run test:gates     # offline suite, no keys needed (103 tests)
+npm run build --workspace=@colonyiq/web
 ```
 
-The Worker makes exactly 1 upstream Meta Model API call per request and returns
-the response untouched. Model IDs are pinned server-side (`sam-3.1`,
-`muse-spark-1.2`); the client sends no model or prompt.
+Live API (needs a Meta key, stored as a Worker secret — never in the repo):
 
-## Privacy
+```bash
+cd apps/api && npx wrangler secret put META_API_KEY
+npx wrangler deploy     # https://colonyiq-api.nitishagar.workers.dev
+```
+
+## Structure
+
+- `apps/web/` — the phone app (Vite + React): capture/upload, tiling, numbered overlay, report view.
+- `apps/api/` — one Cloudflare Worker (Hono): pass-through `/api/segment`, `/api/flag`, `/api/report`. One Meta call per request, response untouched, models pinned server-side.
+- `packages/pipeline/` — pure TypeScript shared by app and eval: SAM stream parser, tile/dedupe/filter/count, CFU math.
+- `eval/` — the numbers: metrics (MAE, box P/R/F1), dev/test splits, a classical-CV baseline, and `live/STATUS.md` with every gate result.
+- `assets/demos/` — the demo video, upload notes, and recording submission details.
+
+## How it works
+
+SAM 3.1 segments every colony zero-shot → classical CV filters → deterministic count → Muse Spark flags suspects and writes the report JSON (it never sets the count — `count = mask count + listed adjustments`, auditable against the overlay).
 
 photos are not stored by ColonyIQ; they are sent to Meta Model API for inference
 
-## Roles
+## Eval (AGAR sample, n=40)
 
-- SAM-3.1: instance segmentation (masks + boxes).
-- Muse Spark (`muse-spark-1.2`): colony flagging + report JSON (JSON only, never the count).
-- Deterministic pipeline: count = mask count + listed adjustments; CFU/mL math unit-tested.
-
-## How to run
-
-```sh
-pnpm install
-pnpm -r test          # offline suite, no keys needed
-pnpm --filter web dev # web app
-cd apps/api && npx wrangler dev src/index.ts  # Worker (local)
-```
-
-Secrets (never in repo, never `VITE_*`):
-
-```sh
-cd apps/api && npx wrangler secret put META_API_KEY
-```
-
-Live tests (needs deployed Worker + secrets):
-
-```sh
-COLONYIQ_LIVE=1 pnpm -r test:live
-```
-
-## Eval
-
-See `eval/` — MAE, median AE, ±5% rate, box P/R/F1 @ IoU 0.5, latency p50/p95,
-split tables (bright/dark/vague/lower-res), ablation (full vs no-CV-filter vs
-LLM-count-only). AGAR dev20 (10 lower-res + 10 bright) for tuning; test20
-(dark + vague) run once.
+Dev MAE 25.1 (median 7); demo plate box P 0.99 / R 0.88 / F1 0.93; classical baseline MAE 39.5. Dark + vague bins held out for the Nov 2 test run. See `eval/live/STATUS.md`.
 
 ## Limits
 
-- Colonies <0.5mm and confluent lawns are unreliable.
-- AGAR bright/734: report both 54 (excl. Contamination) and 78; use 78 for IoU.
-- AGAR bright/1399 (`colonies_number`=-1): TNTC reading pending AGAR docs check.
+Colonies <0.5mm and confluent lawns are unreliable; dense plates use the tiled fallback. AGAR bright/734: labels say 78 (54 + 24 Contamination) — we use 78 for IoU. Bright/1399 (`colonies_number`=-1) is excluded pending a docs check.
 
 ## Attribution
 
-- AGAR dataset: CC BY-NC 2.0, Majchrowska et al., arXiv:2108.01234
-  (https://arxiv.org/abs/2108.01234). Representative subset downscaled for demos.
-- Colony Grounded SAM2 (related prior work on colony segmentation).
-- Roles: SAM (segmentation), Spark (flag/report JSON), deterministic code (count/CFU).
+- AGAR dataset: CC BY-NC 2.0, Majchrowska et al., arXiv:2108.01234 (https://arxiv.org/abs/2108.01234). Representative subset, downscaled for demos. App is free, no paywall.
+- Related prior work: Colony Grounded SAM2 (zero-shot colony segmentation).
+- Models: SAM 3.1 (segment), Muse Spark `muse-spark-1.2` (flag + report), Muse Image (synthetic eval). Voice: ElevenLabs.

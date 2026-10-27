@@ -1,0 +1,245 @@
+/* ColonyIQ theme: warm paper, serif display, mono details. Echoes pi.dev. */
+
+:root {
+  --paper: #f4f1e8;
+  --ink: #252f3d;
+  --ink-soft: #5a6472;
+  --hairline: #d8d2c2;
+  --card: #fbf9f4;
+  --coral: #d9481f;
+  --blue: #2e7fc4;
+  --gold: #e0a81e;
+  --serif: "Plantin MT Pro", "Plantin MT Std", Plantin, Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--sans);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(to right, rgb(37 47 61 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(37 47 61 / 0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.ciq {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+  animation: ciq-rise 0.5s ease-out both;
+}
+
+.ciq-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.ciq h1 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 44px;
+  line-height: 1.05;
+  margin: 8px 0 4px;
+}
+
+.ciq h1 .accent {
+  color: var(--coral);
+  font-style: italic;
+}
+
+.ciq-sub {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+.ciq-status {
+  font-family: var(--mono);
+  font-size: 13px;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 10px 2px;
+  margin: 0 0 16px;
+  min-height: 20px;
+}
+
+.ciq-status.working::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  animation: ciq-pulse 1s ease-in-out infinite;
+}
+
+.ciq-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ciq-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--card);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.ciq-btn:hover:not(:disabled) {
+  background: var(--coral);
+  border-color: var(--coral);
+}
+
+.ciq-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ciq-file {
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+  background: var(--card);
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.ciq-file:hover {
+  border-color: var(--ink);
+}
+
+.ciq-file input {
+  display: none;
+}
+
+.ciq-field {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ciq-field input[type="number"] {
+  font-family: var(--mono);
+  font-size: 13px;
+  width: 76px;
+  padding: 7px 8px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+}
+
+.ciq-check {
+  font-family: var(--mono);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.ciq-plate {
+  position: relative;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--card);
+  animation: ciq-rise 0.4s ease-out both;
+}
+
+.ciq-plate img {
+  display: block;
+  width: 100%;
+}
+
+.ciq-plate canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ciq-report {
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  background: var(--ink);
+  color: #e9edf3;
+  border-radius: 4px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  animation: ciq-rise 0.4s ease-out both;
+}
+
+.ciq-foot {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--hairline);
+  margin-top: 26px;
+  padding-top: 10px;
+}
+
+@keyframes ciq-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ciq-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ciq,
+  .ciq-plate,
+  .ciq-report {
+    animation: none;
+  }
+  .ciq-status.working::after {
+    animation: none;
+  }
+  .ciq-btn {
+    transition: none;
+  }
+}

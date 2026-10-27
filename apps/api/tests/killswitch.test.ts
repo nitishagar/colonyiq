@@ -20,7 +20,7 @@ describe('killswitch (G-SEC-5)', () => {
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ image: 'x', count: 1 }),
+          body: JSON.stringify({ image: 'data:image/jpeg;base64,AAA', count: 1 }),
         },
         { ENVIRONMENT: KILL_VALUE, META_API_KEY: 'k' },
       );
@@ -39,7 +39,7 @@ describe('killswitch (G-SEC-5)', () => {
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ image: 'x' }),
+        body: JSON.stringify({ image: 'data:image/jpeg;base64,AAA' }),
       },
       { ENVIRONMENT: 'dev' }, // enabled (no key → 500, not 503)
     );
@@ -54,14 +54,14 @@ describe('per-IP rate limit on the app (G-SEC-1)', () => {
     for (let i = 0; i < UNAUTHENTICATED_LIMIT; i++) {
       const res = await app.request(
         '/api/segment',
-        { method: 'POST', headers, body: JSON.stringify({ image: 'x' }) },
+        { method: 'POST', headers, body: JSON.stringify({ image: 'data:image/jpeg;base64,AAA' }) },
         { ENVIRONMENT: 'dev' },
       );
       expect(res.status).not.toBe(429);
     }
     const limited = await app.request(
       '/api/segment',
-      { method: 'POST', headers, body: JSON.stringify({ image: 'x' }) },
+      { method: 'POST', headers, body: JSON.stringify({ image: 'data:image/jpeg;base64,AAA' }) },
       { ENVIRONMENT: 'dev' },
     );
     expect(limited.status).toBe(429);

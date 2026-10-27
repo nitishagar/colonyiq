@@ -91,11 +91,15 @@ export default function App() {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: '0 auto', padding: 16, fontFamily: 'system-ui' }}>
-      <h1>ColonyIQ</h1>
-      <p>{status}</p>
-      <p style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <label>
+    <main className="ciq">
+      <div className="ciq-eyebrow">Petri dish → count → lab report</div>
+      <h1>
+        Colony<span className="accent">IQ</span>
+      </h1>
+      <p className="ciq-sub">Every phone, a microbiology lab assistant.</p>
+      <p className={`ciq-status${busy ? ' working' : ''}`}>{status}</p>
+      <div className="ciq-controls">
+        <label className="ciq-file">
           Take photo
           <input
             type="file"
@@ -104,57 +108,40 @@ export default function App() {
             onChange={(e) => onFile(e.target.files?.[0])}
           />
         </label>
-        <label>
+        <label className="ciq-file">
           Upload
           <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} />
         </label>
-        <label>
+        <label className="ciq-check">
           <input type="checkbox" checked={tiled} onChange={(e) => setTiled(e.target.checked)} />
-          Tiled (dense plate)
+          Tiled (dense)
         </label>
-        <label>
+        <label className="ciq-field">
           Dilution
-          <input
-            type="number"
-            min="1"
-            value={dilution}
-            onChange={(e) => setDilution(e.target.value)}
-            style={{ width: 80 }}
-          />
+          <input type="number" min="1" value={dilution} onChange={(e) => setDilution(e.target.value)} />
         </label>
-        <label>
-          mL plated
+        <label className="ciq-field">
+          mL
           <input
             type="number"
             min="0"
             step="0.1"
             value={volume}
             onChange={(e) => setVolume(e.target.value)}
-            style={{ width: 70 }}
           />
         </label>
-        <button type="button" onClick={onSegment} disabled={!photoUrl || busy}>
+        <button type="button" className="ciq-btn" onClick={onSegment} disabled={!photoUrl || busy}>
           {busy ? 'Working…' : 'Segment'}
         </button>
-      </p>
+      </div>
       {photoUrl && (
-        <div style={{ position: 'relative' }}>
-          <img
-            ref={imgRef}
-            src={photoUrl}
-            alt="Agar plate"
-            style={{ width: '100%' }}
-            onLoad={onImageLoad}
-          />
-          <canvas
-            ref={canvasRef}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-          />
+        <div className="ciq-plate">
+          <img ref={imgRef} src={photoUrl} alt="Agar plate" onLoad={onImageLoad} />
+          <canvas ref={canvasRef} />
         </div>
       )}
-      {report && (
-        <pre style={{ whiteSpace: 'pre-wrap', background: '#f5f5f5', padding: 8 }}>{report}</pre>
-      )}
+      {report && <pre className="ciq-report">{report}</pre>}
+      <div className="ciq-foot">SAM 3.1 · Muse Spark · deterministic count</div>
     </main>
   );
 }

@@ -48,6 +48,14 @@ export function createApp() {
 
   app.use('/api/*', killswitch);
 
+  // Reject oversized bodies before they touch quota or the Meta key.
+  app.use('/api/*', async (c, next) => {
+    if (Number(c.req.header('content-length') ?? 0) > 6_000_000) {
+      return c.json({ error: 'PAYLOAD_TOO_LARGE' }, 413);
+    }
+    await next();
+  });
+
   app.use('/api/*', async (c, next) => {
     const ip = c.req.header('CF-Connecting-IP') ?? 'anon';
     if (!checkLimit(`api:${ip}`, UNAUTHENTICATED_LIMIT)) {

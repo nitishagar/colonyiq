@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
 // Client payloads: strict object — model/prompt fields are rejected, never read.
+// Images must be data: URIs (what the app sends): the Worker forwards the
+// string to Meta untouched, so http(s) URLs would turn our key into a fetch
+// proxy. Reject anything else with 400 before any upstream call.
 const imagePayload = z
   .object({
-    image: z.string().min(1, 'image data: URI or URL required'),
+    image: z.string().refine((v) => v.startsWith('data:image/'), 'image data: URI required'),
   })
   .strict();
 
