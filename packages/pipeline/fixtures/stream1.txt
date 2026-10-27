@@ -1,0 +1,4 @@
+<det> x=645 y=1526 w=44 h=46 s=0.93 </det>
+<det> x=700 y=1530 w=40 h=42 s=0.88 mask=aGVsbG8= </det>
+not a detection line
+<det> x=10 y=20 w=30 h=32 s=0.50 </det>

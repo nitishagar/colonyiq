@@ -1,0 +1,16 @@
+name = "colonyiq-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "dev"
+ALLOWED_ORIGIN = "https://colonyiq-web.pages.dev"
+
+# Rate-limit binding (G-D0-2): keep if free-plan deploy accepts it,
+# else fall back to in-memory rateLimiter.ts.
+# [[unsafe.bindings]]
+# name = "RATE_LIMITER"
+# type = "ratelimit"
+# namespace_id = "1001"
+# simple = { limit = 60, period = 60 }

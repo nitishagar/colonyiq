@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+out/
+*.log
+
+.env
+.env.*
+!.env.example
+
+eval/out/*
+!eval/out/.gitkeep
+
+.DS_Store
+*.local
+.wrangler/
+.dev.vars

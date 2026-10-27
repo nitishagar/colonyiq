@@ -1,0 +1,7 @@
+<det> x=0 y=0 w=10 h=10 s=0 </det>
+<det> x=-5 y=100 w=20 h=20 s=1.0 mask=QUJDRA== </det>
+this line has no detection tokens at all
+<det> x=1 y=2 w=3 h=4 s=0.75 mask=aGVsbG8= </det>
+<det> x=1 y=2 w=3 s=0.5 </det>
+<det> x=1 y=2 w=3 h=4 s=2.0 </det>
+   <det> x=7 y=8 w=9 h=10 s=0.01 </det>   
