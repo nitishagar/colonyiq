@@ -1,0 +1,15 @@
+ColonyIQ — every phone, a microbiology lab assistant (Meta Global AI Developer Hackathon)
+
+Demo video (82s, 1920x1080 H.264 + AAC): title -> problem -> LIVE app recording
+(real AGAR plate 349: 88 colonies, numbered overlay, CFU report) -> eval numbers
+-> model roles + links. Voiceover: ElevenLabs (George / flash, ~570 credits).
+
+Pieces: 5 PIL title cards + Playwright screen recording of the deployed app
+(https://colonyiq-web.pages.dev), demo clip trimmed of dead air + 1.135x to fit
+its voice window (disclosed). Audio loudnormed; A/V synced to ElevenLabs
+character alignment.
+
+Judges: everything shown was built Oct 26-27 (see git log). Live demo:
+https://colonyiq-web.pages.dev — Repo: https://github.com/nitishagar/colonyiq
+(must be public at submission). Track: Indie Developer, Push the Frontier.
+Voice: ElevenLabs.
