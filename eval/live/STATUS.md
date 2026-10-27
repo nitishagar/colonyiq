@@ -22,7 +22,7 @@ API token via `CLOUDFLARE_API_TOKEN` env only. No key material in this repo.
 | G-D0-2 ratelimit binding | FALLBACK ACTIVE | In-code `rateLimiter.ts` tested (unit + 429 app test). Native binding probe deferred |
 | G-D0-3 spend cap | MANUAL | Check Meta console for per-key cap; set + screenshot |
 | G-D1-4 scaffold+deploy | PASS | `vite build`, `wrangler deploy`, Pages deploy all green; secret stored |
-| G-D4-1 dev-MAE | PENDING | Needs working segment backend (blocked on SAM resolution) |
+| G-D4-1 dev-MAE | EXISTS (classical baseline) | `eval/classical/count.py` (watershed+contours, spec last-resort): dev n=19 (1399 excluded pending-docs), MAE=39.2, medianAE=31.0. Dense plates collapse (518: 298→~60). Run: `uv run python eval/classical/count.py`. SAM-backend MAE still pending Discord answer |
 
 ## SAM-3.1: what to ask in Discord office hours
 
