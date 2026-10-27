@@ -22,7 +22,8 @@ API token via `CLOUDFLARE_API_TOKEN` env only. No key material in this repo.
 | G-D0-2 ratelimit binding | FALLBACK ACTIVE | In-code `rateLimiter.ts` tested (unit + 429 app test). Native binding probe deferred |
 | G-D0-3 spend cap | MANUAL | Check Meta console for per-key cap; set + screenshot |
 | G-D1-4 scaffold+deploy | PASS | `vite build`, `wrangler deploy`, Pages deploy all green; secret stored |
-| G-D4-1 dev-MAE | EXISTS (classical baseline) | `eval/classical/count.py` (watershed+contours, spec last-resort): dev n=19 (1399 excluded pending-docs), MAE=39.2, medianAE=31.0. Dense plates collapse (518: 298→~60). Run: `uv run python eval/classical/count.py`. SAM-backend MAE still pending Discord answer |
+| G-D4-1 dev-MAE | EXISTS (classical baseline) | `eval/classical/count.py` (watershed+contours, spec last-resort): dev n=19 (1399 excluded pending-docs), MAE=39.5, medianAE=27.0. Dense plates collapse (518: 298→~76). Run: `uv run python eval/classical/count.py`. SAM-backend MAE still pending Discord answer |
+| G-EVAL-4 box P/R/F1 | classical ≈ 0 (honest negative) | Same backend scored by `eval/classical/boxscore.py`: micro P=0.011 R=0.009 F1=0.010 @ IoU 0.5 (TP=11 FP=1011 FN=1239). Root cause: colonies sit ~8 gray levels from agar — threshold regions don't coincide with GT. Classical counts are a weak baseline; classical boxes are unusable. Needs SAM (or learned) backend |
 
 ## SAM-3.1: what to ask in Discord office hours
 

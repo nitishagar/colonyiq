@@ -44,8 +44,8 @@ def count_plate(path, longest=1200):
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
     # Flatten slow background (dish gradient / vignette) with large opening.
-    bg = cv2.morphologyEx(gray, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (51, 51)))
-    flat = cv2.subtract(gray, bg)
+    bg = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (51, 51)))
+    flat = cv2.subtract(bg, gray)  # colonies darker than agar (GT-verified)
     flat = cv2.GaussianBlur(flat, (3, 3), 0)
 
     _, th = cv2.threshold(flat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -107,10 +107,10 @@ def main():
         if gt is None:
             print(f"{key}: SKIP (pending-docs -1)")
             continue
-        pred, _ = count_plate(jpg, args.longest)
+        pred, boxes = count_plate(jpg, args.longest)
         err = abs(pred - gt)
         abs_errs.append(err)
-        rows.append((key, gt, pred, err))
+        rows.append({"plate": key, "gt": gt, "pred": pred, "boxes": boxes})
         print(f"{key}: gt={gt} pred={pred} abserr={err}")
     abs_errs.sort()
     n = len(abs_errs)
@@ -118,7 +118,7 @@ def main():
     med = abs_errs[n // 2] if n % 2 else (abs_errs[n // 2 - 1] + abs_errs[n // 2]) / 2
     print(f"n={n} MAE={mae:.2f} medianAE={med:.1f}")
     out = {"backend": "classical-watershed", "split": "dev", "n": n, "mae": mae,
-           "medianAE": med, "plates": [{"plate": k, "gt": g, "pred": p} for k, g, p, _ in rows]}
+           "medianAE": med, "plates": rows}
     os.makedirs(os.path.join(REPO_ROOT, "eval", "out"), exist_ok=True)
     with open(os.path.join(REPO_ROOT, "eval", "out", "classical_dev.json"), "w") as f:
         json.dump(out, f, indent=1)
